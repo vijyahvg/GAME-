@@ -3,22 +3,15 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 
 // Helper functions for coordinates manipulation
-const rotateCoordinates = (coords, direction) => {
-  return coords.map(([x, y, z]) => {
-    if (direction === 'clockwise') {
-      return [z, y, -x];
-    }
-    return [-z, y, x]; // counterclockwise
-  });
+const rotate90Degrees = (coords) => {
+  return coords.map(([x, y, z]) => [-z, y, x]);
 };
 
-const flipCoordinates = (coords, direction) => {
-  return coords.map(([x, y, z]) => {
-    if (direction === 'horizontal') {
-      return [-x, y, z];
-    }
-    return [x, y, -z]; // vertical
-  });
+const flip = (coords) => {
+  return coords.map(([x, y, z]) => [-x, y, z]);
+};
+const rotateHorizontal = (coords) => {
+  return coords.map(([x, y, z]) => [x, 0, z]);
 };
 
 const normalizeCoordinates = (coords) => {
@@ -35,113 +28,103 @@ const normalizeCoordinates = (coords) => {
 
 
 const POLYSPHERE_PIECES = [
-  // A - Red Z shape
   {
-    id: 'A',
+    id: 'A',  // Base layer - Large L (7 spheres)
     spheres: [
       [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
-      [0, 0.8, 0], [0.8, 0.8, 0]
+      [0, 0, 0.8], [0.8, 0, 0.8],
+      [0, 0, 1.6], [0, 0, 2.4]
     ],
     color: '#FF0000'
   },
-  // B - Pink S shape
   {
-    id: 'B',
+    id: 'B',  // Base layer - T shape (6 spheres)
     spheres: [
-      [0.8, 0, 0], [1.6, 0, 0],
-      [0, 0.8, 0], [0.8, 0.8, 0], [1.6, 0.8, 0]
-    ],
-    color: '#FF69B4'
-  },
-  // C - Light Pink L shape
-  {
-    id: 'C',
-    spheres: [
-      [0, 0, 0], [0.8, 0, 0],
-      [0, 0.8, 0], [0, 1.6, 0]
-    ],
-    color: '#FFB6C1'
-  },
-  // D - Blue corner shape
-  {
-    id: 'D',
-    spheres: [
-      [0, 0, 0], [0.8, 0, 0],
-      [0.4, 0.8, 0]
+      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
+      [0.8, 0, 0.8], [0.8, 0, 1.6],
+      [0.8, 0, 2.4]
     ],
     color: '#0000FF'
   },
-  // E - Yellow straight piece
   {
-    id: 'E',
+    id: 'C',  // Base/second layer - Square (6 spheres)
     spheres: [
-      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0], [2.4, 0, 0], [3.2, 0, 0]
+      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
+      [0, 0, 0.8], [0.8, 0, 0.8], [1.6, 0, 0.8]
     ],
-    color: '#FFFF00'
+    color: '#00FF00'
   },
-  // F - Purple square
   {
-    id: 'F',
+    id: 'D',  // Base layer - Z shape (6 spheres)
     spheres: [
-      [0, 0, 0], [0.8, 0, 0],
-      [0, 0.8, 0], [0.8, 0.8, 0]
+      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
+      [1.6, 0, 0.8], [2.4, 0, 0.8], [3.2, 0, 0.8]
     ],
     color: '#800080'
   },
-  // G - Dark Purple Z shape
   {
-    id: 'G',
-    spheres: [
-      [0, 0, 0], [0.8, 0, 0],
-      [0.8, 0.8, 0], [1.6, 0.8, 0]
-    ],
-    color: 'purple'
-  },
-  // H - Green L shape
-  {
-    id: 'H',
-    spheres: [
-      [0, 0, 0],
-      [0, 0.8, 0], [0.8, 0.8, 0]
-    ],
-    color: 'lightgreen'
-  },
-  // I - Orange L shape
-  {
-    id: 'I',
+    id: 'E',  // Second layer - L shape (5 spheres)
     spheres: [
       [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
-      [1.6, 0.8, 0], [1.6, 1.6, 0]
+      [0, 0, 0.8], [0, 0, 1.6]
     ],
     color: '#FFA500'
   },
-  // J - Green straight piece
   {
-    id: 'J',
+    id: 'F',  // Second layer - T shape (5 spheres)
     spheres: [
-      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0], [2.4, 0, 0]
+      [0, 0, 0], [0.8, 0, 0], [1.6, 0, 0],
+      [0.8, 0, 0.8], [0.8, 0, 1.6]
     ],
-    color: 'green'
+    color: '#FFFF00'
   },
-  // K - Orange corner piece
   {
-    id: 'K',
+    id: 'G',  // Third layer - Corner (5 spheres)
     spheres: [
-      [0, 0, 0], [0.8, 0, 0], [0.4, 0.8, 0]
+      [0, 0, 0], [0.8, 0, 0],
+      [0, 0, 0.8], [0.8, 0, 0.8],
+      [0, 0, 1.6]
     ],
-    color: '#FFA500'
+    color: '#FF69B4'
   },
-  // L - Light Blue S shape
   {
-    id: 'L',
+    id: 'H',  // Third layer - L shape (4 spheres)
     spheres: [
-      [0.8, 0, 0], [1.6, 0, 0],
-      [0, 0.8, 0], [0.8, 0.8, 0]
+      [0, 0, 0], [0.8, 0, 0],
+      [0, 0, 0.8], [0, 0, 1.6]
     ],
-    color: '#87CEEB'
+    color: '#00FFFF'
+  },
+  {
+    id: 'I',  // Fourth layer piece 1 (2 spheres)
+    spheres: [
+      [0, 0, 0], [0.8, 0, 0]
+    ],
+    color: '#8B4513'
+  },
+  {
+    id: 'J',  // Fourth layer piece 2 (2 spheres)
+    spheres: [
+      [0, 0, 0], [0.8, 0, 0]
+    ],
+    color: '#4B0082'
+  },
+  {
+    id: 'K',  // Bridge piece (4 spheres)
+    spheres: [
+      [0, 0, 0], [0.8, 0, 0],
+      [0, 0, 0.8], [0.8, 0, 0.8]
+    ],
+    color: '#32CD32'
+  },
+  {
+    id: 'L',  // Top piece (1 sphere)
+    spheres: [
+      [0, 0, 0]
+    ],
+    color: '#FF4500'
   }
 ];
-
 // Update the Sphere component with consistent size
 function Sphere({ position, color }) {
     return (
@@ -185,51 +168,40 @@ function Sphere({ position, color }) {
   }
 
 // Add this new component after your existing components
-function TopControls({ isPlaying, onPlay, onReset, onPause }) {
-    return (
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: '10px',
-        zIndex: 1000
-      }}>
-        <button style={{
-          padding: '8px 24px',
-          background: '#2196F3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }} onClick={onPlay}>
-          PLAY
-        </button>
-        <button style={{
-          padding: '8px 24px',
-          background: '#F44336',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }} onClick={onReset}>
-          RESET
-        </button>
-        <button style={{
-          padding: '8px 24px',
-          background: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }} onClick={onPause}>
-          PAUSE
-        </button>
-      </div>
-    );
-  }
-  
+function TopControls({ onReset }) {  // Remove other props
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      gap: '10px',
+      zIndex: 1000
+    }}>
+      <button style={{
+        padding: '8px 24px',
+        background: '#2196F3',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }} onClick={() => alert('Solving feature coming soon!')}>  {/* Placeholder for solve function */}
+        SOLVE
+      </button>
+      <button style={{
+        padding: '8px 24px',
+        background: '#F44336',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }} onClick={onReset}>
+        RESET
+      </button>
+    </div>
+  );
+}
 
 // Update your NavigationControls component
 function NavigationControls({ onMove, visible }) {
@@ -305,17 +277,62 @@ function NavigationControls({ onMove, visible }) {
         gap: '10px',
         zIndex: 1000
       }}>
-        <button style={buttonStyle} onClick={() => onRotate('clockwise')}>
-          Rotate CW
+        <button style={buttonStyle} onClick={() => onRotate()}>
+          Rotate
         </button>
-        <button style={buttonStyle} onClick={() => onRotate('counterclockwise')}>
-          Rotate CCW
+        <button style={buttonStyle} onClick={() => onFlip()}>
+          Flip
         </button>
-        <button style={buttonStyle} onClick={() => onFlip('horizontal')}>
-          Flip H
+      </div>
+    );
+  }
+
+  // Add UndoRedoControls component
+  function UndoRedoControls({ onUndo, onRedo, canUndo, canRedo }) {
+    const buttonStyle = {
+      padding: '8px 16px',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      width: '120px',
+      fontSize: '14px',
+      margin: '5px'
+    };
+  
+    return (
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',   // Same bottom position as NavigationControls
+        left: '90%',      // Center like NavigationControls
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        flexDirection: 'column',  // Stack vertically
+        marginTop: '120px',      // Add margin to separate from other buttons
+        gap: '10px',
+        zIndex: 1000
+      }}>
+        <button
+          style={{
+            ...buttonStyle,
+            background: canUndo ? '#FF4444' : '#888888',
+            cursor: canUndo ? 'pointer' : 'not-allowed'
+          }}
+          onClick={onUndo}
+          disabled={!canUndo}
+        >
+          Undo
         </button>
-        <button style={buttonStyle} onClick={() => onFlip('vertical')}>
-          Flip V
+        <button
+          style={{
+            ...buttonStyle,
+            background: canRedo ? '#4CAF50' : '#888888',
+            cursor: canRedo ? 'pointer' : 'not-allowed'
+          }}
+          onClick={onRedo}
+          disabled={!canRedo}
+        >
+          Redo
         </button>
       </div>
     );
@@ -329,9 +346,10 @@ function App() {
     const [selectedPiece, setSelectedPiece] = useState(null);
     const [activePiece, setActivePiece] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [autoRotate, setAutoRotate] = useState(false);
     const [usedPieces, setUsedPieces] = useState(new Set()); // Track used pieces
     const [rotations, setRotations] = useState({}); // Track rotation state for each piece
+    const [placementHistory, setPlacementHistory] = useState([]);
+    const [redoStack, setRedoStack] = useState([]);
 
     // Update the pyramid positions calculation
     const pyramidPositions = React.useMemo(() => {
@@ -409,88 +427,147 @@ const handleMove = (direction) => {
     });
   };  
   
-    const handlePlay = () => {
-        setIsPlaying(true);
-        setAutoRotate(true);
-      };
-    
-      const handlePause = () => {
-        setIsPlaying(false);
-        setAutoRotate(false);
-      };
+
+      // Add these handler functions
+const handleUndo = () => {
+  if (placementHistory.length === 0) return;
+
+  const lastAction = placementHistory[placementHistory.length - 1];
+  
+  // Save to redo stack
+  setRedoStack(prev => [...prev, {
+    ...lastAction,
+    pieceData: placedPieces[lastAction.pieceId]
+  }]);
+
+  // Remove the last placed piece
+  setPlacedPieces(prev => {
+    const newPieces = { ...prev };
+    delete newPieces[lastAction.pieceId];
+    return newPieces;
+  });
+
+  // Remove from used pieces
+  setUsedPieces(prev => {
+    const newUsed = new Set(prev);
+    newUsed.delete(lastAction.pieceType);
+    return newUsed;
+  });
+
+  // Update history
+  setPlacementHistory(prev => prev.slice(0, -1));
+  
+  // Clear active piece if it was the undone piece
+  if (activePiece === lastAction.pieceId) {
+    setActivePiece(null);
+  }
+};
+
+const handleRedo = () => {
+  if (redoStack.length === 0) return;
+
+  const redoAction = redoStack[redoStack.length - 1];
+  
+  // Restore the piece
+  setPlacedPieces(prev => ({
+    ...prev,
+    [redoAction.pieceId]: redoAction.pieceData
+  }));
+
+  // Add back to used pieces
+  setUsedPieces(prev => new Set([...prev, redoAction.pieceType]));
+
+  // Update history
+  setPlacementHistory(prev => [...prev, {
+    pieceId: redoAction.pieceId,
+    pieceType: redoAction.pieceType
+  }]);
+
+  // Remove from redo stack
+  setRedoStack(prev => prev.slice(0, -1));
+};
     
       const handleReset = () => {
         setPlacedPieces({});
         setActivePiece(null);
         setIsPlaying(false);
-        setAutoRotate(false);
         setUsedPieces(new Set());
         setRotations({});
+        setPlacementHistory([]);
+        setRedoStack([]);
       };
-      const handleRotate = (direction) => {
+      const handleRotate = () => {
         if (!activePiece || !placedPieces[activePiece]) return;
-      
+        
         setPlacedPieces(prev => {
           const piece = prev[activePiece];
-          const rotatedCoords = rotateCoordinates(piece.piece.spheres, direction);
-          const normalizedCoords = normalizeCoordinates(rotatedCoords);
-      
+          const rotatedCoords = rotate90Degrees(piece.piece.spheres);
+          
           return {
             ...prev,
             [activePiece]: {
               ...piece,
               piece: {
                 ...piece.piece,
-                spheres: normalizedCoords
+                spheres: rotatedCoords
               }
             }
           };
         });
       };
       
-      const handleFlip = (direction) => {
+      const handleFlip = () => {
         if (!activePiece || !placedPieces[activePiece]) return;
-      
+        
         setPlacedPieces(prev => {
           const piece = prev[activePiece];
-          const flippedCoords = flipCoordinates(piece.piece.spheres, direction);
-          const normalizedCoords = normalizeCoordinates(flippedCoords);
-      
+          const flippedCoords = flip(piece.piece.spheres);
+          
           return {
             ...prev,
             [activePiece]: {
               ...piece,
               piece: {
                 ...piece.piece,
-                spheres: normalizedCoords
+                spheres: flippedCoords
               }
             }
           };
         });
       };
 
-      // Update handlePieceSelect to place pieces at a better starting position
+      // Update handlePieceSelect
 const handlePieceSelect = () => {
-    // Check if piece is already used
-    if (usedPieces.has(POLYSPHERE_PIECES[currentPiece].id)) {
-      return; // Don't allow selection of used pieces
-    }
+  if (usedPieces.has(POLYSPHERE_PIECES[currentPiece].id)) {
+    return;
+  }
 
-    const id = Date.now().toString();
-    setPlacedPieces(prev => ({
-      ...prev,
-      [id]: {
-        piece: POLYSPHERE_PIECES[currentPiece],
-        position: { x: 0, y: 0, z: 0 }
-      }
-    }));
-    setActivePiece(id);
-    setSelectedPiece(currentPiece);
-    
-    // Mark piece as used
-    setUsedPieces(prev => new Set([...prev, POLYSPHERE_PIECES[currentPiece].id]));
+  const id = Date.now().toString();
+  const horizontalPiece = {
+    ...POLYSPHERE_PIECES[currentPiece],
+    spheres: POLYSPHERE_PIECES[currentPiece].spheres.map(([x, y, z]) => [x, 0, z])
   };
 
+  // Clear redo stack when new piece is placed
+  setRedoStack([]);
+
+  setPlacedPieces(prev => ({
+    ...prev,
+    [id]: {
+      piece: horizontalPiece,
+      position: { x: 0, y: 0, z: 0 }
+    }
+  }));
+  
+  setPlacementHistory(prev => [...prev, {
+    pieceId: id,
+    pieceType: POLYSPHERE_PIECES[currentPiece].id
+  }]);
+
+  setActivePiece(id);
+  setSelectedPiece(currentPiece);
+  setUsedPieces(prev => new Set([...prev, POLYSPHERE_PIECES[currentPiece].id]));
+};
     
       // Update the Pyramid Container section of your return statement
       return (
@@ -570,12 +647,9 @@ const handlePieceSelect = () => {
 
           {/* Pyramid Container */}
           <div style={{ width: '50%', height: '100%', position: 'relative' }}>
-            <TopControls 
-              isPlaying={isPlaying}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onReset={handleReset}
-            />
+          <TopControls 
+  onReset={handleReset}
+/>
             
             <Canvas 
               style={{ background: '#000000' }} 
@@ -615,8 +689,6 @@ const handlePieceSelect = () => {
               </group>
                ))}
               <OrbitControls 
-                autoRotate={autoRotate}
-                autoRotateSpeed={5}
               />
             </Canvas>
       
@@ -629,8 +701,17 @@ const handlePieceSelect = () => {
          onFlip={handleFlip}
          visible={activePiece !== null}
         />
+        <UndoRedoControls 
+    onUndo={handleUndo}
+    onRedo={handleRedo}
+    canUndo={placementHistory.length > 0}
+    canRedo={redoStack.length > 0}
+  />
+        
           </div>
+          
         </div>
+        
       );
     }
 export default App;
